@@ -1,0 +1,2 @@
+threadcle , la cle se balance (qd proche de DK , grillejeu[0][1] = CLE) 
+		change de position toutes les 0,7 sec 

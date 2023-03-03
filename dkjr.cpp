@@ -83,13 +83,25 @@ typedef struct
   int position;
 } S_CROCO;
 
-// ------------------------------------------------------------------------
+// ---------------------------------------------------------RAJOUTE PAR MOI 
+struct sigaction sigAct; 
+
+
 
 int main(int argc, char* argv[])
 {
-	int evt;
 
+	sigemptyset(&sigAct.sa_mask); 
+ 	sigAct.sa_handler = HandlerSIGALRM; 
+	sigAct.sa_flags = 0; 
+	sigaction(SIGALRM, &sigAct, NULL); 
+
+	int evt;
 	ouvrirFenetreGraphique();
+
+
+	pthread_create(&threadCle, NULL,(void*(*)(void*)) FctThreadCle,NULL);
+	pthread_create(&threadEvenements, NULL,(void*(*)(void*)) FctThreadEvenements,NULL);
 
 	afficherCage(2);
 	afficherCage(3);
@@ -97,7 +109,7 @@ int main(int argc, char* argv[])
 
 	afficherRireDK();
 
-	afficherCle(3);
+	//afficherCle(3);
 
 	afficherCroco(11, 2);
 	afficherCroco(17, 1);
@@ -119,7 +131,7 @@ int main(int argc, char* argv[])
 
 	while (1)
 	{
-	    evt = lireEvenement();
+	   /* evt = lireEvenement();
 
 	    switch (evt)
 	    {
@@ -136,7 +148,7 @@ int main(int argc, char* argv[])
 			break;
 		case SDLK_RIGHT:
 			printf("KEY_RIGHT\n");
-	    }
+	    }*/
 	}
 }
 
@@ -177,3 +189,90 @@ void afficherGrilleJeu()
    printf("\n");   
 }
 
+
+/////***********************************************************\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\//
+
+void* FctThreadCle(void *)
+{
+	int i = 1 ;
+	int contexte =1 ; // 1 = aller , 0 = retour 
+	 struct timespec t;
+ 	  t.tv_sec = 0;
+  	 t.tv_nsec = 700000000;
+	while(1)
+	{
+		afficherCle(i);
+		switch(i)
+		{
+		
+			case 1 : 
+					grilleJeu[0][1].type=CLE ;
+				 	nanosleep(&t,NULL);
+					i++ ;
+					contexte=1 ;//aller 
+			break ;
+			case 2 : 
+					grilleJeu[0][1].type=VIDE ;
+				 	nanosleep(&t,NULL);
+					if(contexte==1)i++;
+					else i-- ;
+			break ;
+			case 3 :
+					grilleJeu[0][1].type=VIDE ;
+				 	nanosleep(&t,NULL);
+					if(contexte==1)i++;
+					else i-- ;
+			break ;
+			case 4 :
+					grilleJeu[0][1].type=VIDE ;
+				 	nanosleep(&t,NULL);
+					i-- ;
+					contexte=0 ; //retour 
+			break ;
+
+		}
+
+		effacerCarres(3,12,2,3);
+
+	}
+
+}
+
+void * FctThreadEvenements (void *)
+{
+		while (1)
+	{
+		printf("TOUR DE BOUCLE \n");
+		alarm(1);// !!
+	    evenement = lireEvenement();
+		alarm(0); //!!
+	    switch (evenement)
+	    {
+		case SDL_QUIT:
+			exit(0);
+		case SDLK_UP:
+			printf("KEY_UP\n");
+			break;
+		case SDLK_DOWN:
+			printf("KEY_DOWN\n");
+			break;
+		case SDLK_LEFT:
+			printf("KEY_LEFT\n");
+			break;
+		case SDLK_RIGHT:
+			printf("KEY_RIGHT\n");
+			break ;
+		default :
+			printf("AUCUN_EVENEMENT\n");
+			break ;
+	    }
+
+		// revoir teams !! au niveau de aucunelmt
+	}
+
+
+}
+void HandlerSIGALRM(int sig)
+{
+
+}
