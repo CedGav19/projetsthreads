@@ -1,2 +1,5 @@
-threadcle , la cle se balance (qd proche de DK , grillejeu[0][1] = CLE) 
-		change de position toutes les 0,7 sec 
+demadner au prof si on doit savoir sauter a tout moment , et comment faire 
+en sorte que ca envoie un sgquit qd on envoie aucun evnt 
+
+demander ausis pour la mort 
+
