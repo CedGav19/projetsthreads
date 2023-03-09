@@ -139,8 +139,10 @@ int main(int argc, char* argv[])
 		pthread_create(&threadDKJr, NULL,(void*(*)(void*)) FctThreadDKJr,NULL);
 		effacerCarres(11,7, 2, 2);
 	}
+			
 		pthread_join(threadDKJr, (void **)NULL);
-
+		compteurDeMort++;
+		afficherEchec(compteurDeMort);
 
 	while(1);
 
@@ -241,17 +243,17 @@ void * FctThreadEvenements (void *)
 	sigset_t mask; 
 	sigemptyset(&mask); 
  	sigaddset(&mask, SIGINT); 
+	 
    	sigprocmask(SIG_SETMASK, &mask, NULL); 
+	 
 
 	while (1)
 	{
 		pthread_mutex_lock(&mutexEvenement);
 		evenement= AUCUN_EVENEMENT;
-		alarm(1);
+	
 	    evenement = lireEvenement();
-		printf("passage apres lirevnt\n");
-		alarm(0);
-		printf("passage apres alarm\n");
+		
 		pthread_mutex_unlock(&mutexEvenement);
 		
 	    switch (evenement)
@@ -293,6 +295,9 @@ void* FctThreadDKJr(void* p)
 
 
 
+	struct timespec tsaut;
+ 	tsaut.tv_sec = 0;
+  	tsaut.tv_nsec = 500000000;
 	struct timespec t;
  	t.tv_sec = 0;
   	t.tv_nsec = 700000000;
@@ -338,11 +343,12 @@ void* FctThreadDKJr(void* p)
 														setGrilleJeu(3, positionDKJr, DKJR);
 														afficherDKJr(11, (positionDKJr * 2) + 7, 
 														13);
-													}
+													
 													pthread_mutex_unlock(&mutexGrilleJeu);
 													pthread_mutex_unlock(&mutexEvenement);
 													nanosleep(&t,NULL);
 													pthread_exit(0);
+													}
 												}
 								break;
 								case SDLK_RIGHT:
@@ -381,6 +387,20 @@ void* FctThreadDKJr(void* p)
 												}
 												else 
 												{
+													setGrilleJeu(3, positionDKJr);
+													effacerCarres(11, (positionDKJr * 2) + 7, 2, 2);
+
+													setGrilleJeu(2, positionDKJr, DKJR);
+													afficherDKJr(10, (positionDKJr * 2) + 7, 
+													8);
+													nanosleep(&tsaut ,NULL);
+
+													setGrilleJeu(2, positionDKJr);
+													effacerCarres(10, (positionDKJr * 2) + 7, 2, 2);
+
+													setGrilleJeu(3, positionDKJr, DKJR);
+													afficherDKJr(11, (positionDKJr * 2) + 7, 
+													((positionDKJr - 1) % 4) + 1);
 													
 												}
 											}
@@ -485,6 +505,47 @@ void* FctThreadDKJr(void* p)
 													afficherDKJr(7, (positionDKJr * 2) + 7, 
 													((positionDKJr - 1) % 4) + 1);
 												}
+												if (positionDKJr==3)
+												{
+													setGrilleJeu(1, positionDKJr);
+													effacerCarres(7, (positionDKJr * 2) + 7, 2, 2);
+													if(grilleJeu[0][1].type!=CLE )
+													{
+														//animation echec 
+														afficherDKJr(5, 12, 9);
+														nanosleep(&tsaut,NULL);
+														effacerCarres(5, 12, 3, 2);
+
+														afficherDKJr(9, 9, 12);
+														nanosleep(&tsaut,NULL);
+														effacerCarres(6, 11, 2, 2);
+
+														afficherDKJr(11, 7, 13);
+														pthread_mutex_unlock(&mutexGrilleJeu);
+														pthread_mutex_unlock(&mutexEvenement);
+														nanosleep(&t,NULL);
+														pthread_exit(0);
+													}
+													else 
+													{
+														afficherDKJr(5, 12, 9);
+														nanosleep(&tsaut,NULL);
+														effacerCarres(5, 12, 3, 3);
+
+														afficherDKJr(3, 11, 10);
+														nanosleep(&tsaut,NULL);
+														effacerCarres(3, 11, 3, 3);
+
+														afficherDKJr(6, 10, 11);
+														nanosleep(&tsaut,NULL);
+														effacerCarres(6,10,2,3);
+
+														positionDKJr=1;
+														etatDKJr=LIBRE_BAS;
+														setGrilleJeu(3, 1, DKJR); 
+														afficherDKJr(11, 9, 1); 
+													}
+												}
 											}
 											
 							break;
@@ -497,6 +558,26 @@ void* FctThreadDKJr(void* p)
 												afficherDKJr(6, (positionDKJr * 2) + 7, 
 												7);
 												etatDKJr=LIANE_HAUT;
+										}
+										else 
+										{
+											if(positionDKJr!=7)
+											{
+												setGrilleJeu(1, positionDKJr);
+												effacerCarres(7, (positionDKJr * 2) + 7, 2, 2);
+
+												setGrilleJeu(0, positionDKJr, DKJR);
+												afficherDKJr(6, (positionDKJr * 2) + 7, 
+												8);
+												nanosleep(&tsaut ,NULL);
+
+												setGrilleJeu(0, positionDKJr);
+												effacerCarres(6, (positionDKJr * 2) + 7, 2, 2);
+
+												setGrilleJeu(1, positionDKJr, DKJR);
+												afficherDKJr(7, (positionDKJr * 2) + 7, 
+												((positionDKJr - 1) % 4) + 1);
+											}
 										}
 
 
@@ -523,7 +604,5 @@ void HandlerSIGQUIT(int sig )
 }
 void HandlerSIGALRM(int s )
 {
-	evenement=AUCUN_EVENEMENT;
-	printf("PASSAGE DANS SIGALRM avec evenement = %d\n",evenement);
-	// peut etre faire un jump 
+	
 }
