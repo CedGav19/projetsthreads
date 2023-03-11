@@ -103,6 +103,9 @@ int main(int argc, char* argv[])
 
     pthread_mutex_init(&mutexEvenement, NULL); 
 
+	pthread_mutex_init(&mutexDK, NULL); 
+    pthread_cond_init(&condDK, NULL);
+
 	int evt;
 	ouvrirFenetreGraphique();
 
@@ -110,6 +113,8 @@ int main(int argc, char* argv[])
 	pthread_create(&threadCle, NULL,(void*(*)(void*)) FctThreadCle,NULL);
 	pthread_create(&threadEvenements, NULL,(void*(*)(void*)) FctThreadEvenements,NULL);
 	pthread_create(&threadDKJr, NULL,(void*(*)(void*)) FctThreadDKJr,NULL);
+	pthread_create(&threadDK, NULL,(void*(*)(void*)) FctThreadDK,NULL);
+	pthread_create(&threadEnnemis, NULL,(void*(*)(void*)) FctThreadEnnemis,NULL);
 
 	//masquage des signaux 
 	sigset_t mask; 
@@ -127,9 +132,8 @@ int main(int argc, char* argv[])
 	afficherCorbeau(10, 2);*/
 	
 	effacerCarres(0, 0, 7, 3);
+	afficherScore(score);
 
-	
-	afficherScore(1999);
 	while (compteurDeMort<2)
 	{
 		printf("DKJR est dead \n");
@@ -201,10 +205,13 @@ void* FctThreadCle(void *)
 	int contexte =1 ; // 1 = aller , 0 = retour 
 	 struct timespec t;
  	  t.tv_sec = 0;
-  	 t.tv_nsec = 700000000;
+	   t.tv_nsec = 700000000;
 	while(1)
 	{
+		pthread_mutex_lock(&mutexGrilleJeu);
 		afficherCle(i);
+		pthread_mutex_unlock(&mutexGrilleJeu);
+	
 		switch(i)
 		{
 		
@@ -229,9 +236,9 @@ void* FctThreadCle(void *)
 			break ;
 
 		}
-
+		pthread_mutex_lock(&mutexGrilleJeu);
 		effacerCarres(3,12,2,3);
-
+		pthread_mutex_unlock(&mutexGrilleJeu);
 	}
 
 }
@@ -243,7 +250,7 @@ void * FctThreadEvenements (void *)
 	sigset_t mask; 
 	sigemptyset(&mask); 
  	sigaddset(&mask, SIGINT); 
-	 
+ 	sigaddset(&mask, SIGALRM); 
    	sigprocmask(SIG_SETMASK, &mask, NULL); 
 	 
 
@@ -288,9 +295,8 @@ void * FctThreadEvenements (void *)
 void* FctThreadDKJr(void* p)
 {
 	sigset_t mask; 
-	sigemptyset(&mask); 
- 
-	 sigaddset(&mask, SIGALRM); 
+	sigemptyset(&mask);
+	sigaddset(&mask, SIGALRM); 
    	sigprocmask(SIG_SETMASK, &mask, NULL); 
 
 
@@ -528,6 +534,7 @@ void* FctThreadDKJr(void* p)
 													}
 													else 
 													{
+														//réussite
 														afficherDKJr(5, 12, 9);
 														nanosleep(&tsaut,NULL);
 														effacerCarres(5, 12, 3, 3);
@@ -544,6 +551,13 @@ void* FctThreadDKJr(void* p)
 														etatDKJr=LIBRE_BAS;
 														setGrilleJeu(3, 1, DKJR); 
 														afficherDKJr(11, 9, 1); 
+
+														pthread_mutex_lock(&mutexScore);
+														score+=10;
+														MAJScore =true;
+														pthread_mutex_unlock(&mutexScore);
+														pthread_create(&threadScore, NULL,(void*(*)(void*)) FctThreadScore,NULL);
+														pthread_cond_signal(&condDK); 
 													}
 												}
 											}
@@ -598,11 +612,101 @@ void* FctThreadDKJr(void* p)
 	}
 	pthread_exit(0);	
 }
+
+void* FctThreadDK(void* p)
+{
+	sigset_t mask; 
+	sigemptyset(&mask); 
+ 	sigaddset(&mask, SIGINT); 
+ 	sigaddset(&mask, SIGALRM); 
+   	sigprocmask(SIG_SETMASK, &mask, NULL); 
+
+	pthread_mutex_lock(&mutexDK); 
+		struct timespec t;
+	t.tv_sec = 0;
+  	t.tv_nsec = 700000000;
+	  for (int i =1 ;i<=4;i++) afficherCage(i);
+	  int cleAttrapee = 0;
+	
+	  while(1)
+    {
+		
+        pthread_cond_wait(&condDK,&mutexDK);
+		printf("dkjr a attrapé la cle\n");
+		cleAttrapee++;
+		if(cleAttrapee%4==0)
+		{
+			effacerCarres(2, 7, 5,5);
+			afficherRireDK();
+			nanosleep(&t,NULL);
+			//modif du score 
+			pthread_mutex_lock(&mutexScore);
+			score+=10;
+			MAJScore =true;
+			pthread_mutex_unlock(&mutexScore);
+			pthread_create(&threadScore, NULL,(void*(*)(void*)) FctThreadScore,NULL);
+		}
+		pthread_mutex_lock(&mutexGrilleJeu);
+		effacerCarres(2, 7, 5,5);
+		pthread_mutex_unlock(&mutexGrilleJeu);
+
+		for (int i =(cleAttrapee%4)+1 ;i<=4;i++) afficherCage(i);
+    }
+	pthread_mutex_unlock(&mutexDK); 
+}
+
+void* FctThreadScore(void* p)
+{
+	sigset_t mask; 
+	sigemptyset(&mask); 
+ 	sigaddset(&mask, SIGINT); 
+ 	sigaddset(&mask, SIGALRM); 
+   	sigprocmask(SIG_SETMASK, &mask, NULL); 
+
+	if(MAJScore==true) 
+	{
+		 afficherScore(score);
+		 MAJScore=false;
+	}
+	return (NULL);
+}
+
+void* FctThreadEnnemis(void* p)
+{
+	alarm(15);
+	int RDMennemi ;
+	srand(time(NULL));
+	while(1)
+	{
+		struct timespec t;
+		t.tv_sec = delaiEnnemis/1000;
+		t.tv_nsec =delaiEnnemis-(((int)delaiEnnemis/1000)*1000);
+	
+	
+		nanosleep(&t,NULL);
+		RDMennemi = rand();
+		if(RDMennemi%2==0)
+		{
+			printf("Spawn de croco \n");
+		}
+		else 
+		{
+			printf("Spawn de corbeau \n");
+		}
+		printf("delaiennemi = %d \n",delaiEnnemis);
+
+	}
+}
+
 void HandlerSIGQUIT(int sig )
 {
 	//printf("dkjr recoit sigquit\n");
 }
 void HandlerSIGALRM(int s )
 {
-	
+	delaiEnnemis-=250;
+	if(delaiEnnemis > 2500)
+	{
+		alarm(15);
+	}
 }
