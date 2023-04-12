@@ -162,13 +162,12 @@ int main(int argc, char* argv[])
 		afficherEchec(compteurDeMort);
 		pthread_create(&threadDKJr, NULL,(void*(*)(void*)) FctThreadDKJr,NULL);
 		effacerCarres(11,7, 2, 2);
-		
 		resetDepart();
 	}
-			
 		pthread_join(threadDKJr, (void **)NULL);
 		compteurDeMort++;
 		afficherEchec(compteurDeMort);
+		pthread_join(threadEvenements, (void **)NULL);
 
 	
 
@@ -321,8 +320,6 @@ void* FctThreadDKJr(void* p)
 	sigaddset(&mask, SIGALRM); 
    	sigprocmask(SIG_SETMASK, &mask, NULL); 
 
-
-
 	struct timespec tsaut;
  	tsaut.tv_sec = 1;
   	tsaut.tv_nsec = 400000000;
@@ -425,6 +422,8 @@ void* FctThreadDKJr(void* p)
 										if(grilleJeu[2][positionDKJr].type == CORBEAU)
 										{
 											pthread_kill(grilleJeu[2][positionDKJr].tid ,SIGUSR1);   
+											setGrilleJeu(3, positionDKJr);
+											effacerCarres(11, (positionDKJr * 2) + 7, 2, 2);
 											pthread_mutex_unlock(&mutexGrilleJeu);
 											pthread_mutex_unlock(&mutexEvenement);
 											pthread_exit(0);
@@ -500,19 +499,21 @@ void* FctThreadDKJr(void* p)
 			case LIANE_BAS:
 							if(evenement==SDLK_DOWN)
 							{
-								setGrilleJeu(2, positionDKJr);
-								effacerCarres(10, (positionDKJr * 2) + 7, 2, 2);
-
-								setGrilleJeu(3, positionDKJr, DKJR);
-								afficherDKJr(11, (positionDKJr * 2) + 7, 
-								((positionDKJr - 1) % 4) + 1);	
-								etatDKJr=LIBRE_BAS;
-							}
-			break;
-			case DOUBLE_LIANE_BAS:
-								if(evenement==SDLK_DOWN)
+								if(grilleJeu[3][positionDKJr].type == CROCO)
 								{
+									setGrilleJeu(2, positionDKJr);
 									
+									printf("tombe sur croco a partir d'une liane( en bas ) \n");
+									setGrilleJeu(2, positionDKJr);
+									effacerCarres(10, (positionDKJr * 2) + 7, 2, 2);
+									pthread_kill(grilleJeu[3][positionDKJr].tid ,SIGUSR2);  
+									pthread_mutex_unlock(&mutexGrilleJeu);
+									pthread_mutex_unlock(&mutexEvenement);
+									pthread_exit(0);
+								}
+								else 
+								{
+
 									setGrilleJeu(2, positionDKJr);
 									effacerCarres(10, (positionDKJr * 2) + 7, 2, 2);
 
@@ -520,6 +521,34 @@ void* FctThreadDKJr(void* p)
 									afficherDKJr(11, (positionDKJr * 2) + 7, 
 									((positionDKJr - 1) % 4) + 1);	
 									etatDKJr=LIBRE_BAS;
+								}
+							}
+			break;
+			case DOUBLE_LIANE_BAS:
+								if(evenement==SDLK_DOWN)
+								{
+									if(grilleJeu[3][positionDKJr].type == CROCO)
+									{
+										setGrilleJeu(2, positionDKJr);
+										
+										printf("tombe sur croco a partir d'une liane( en bas ) \n");
+										setGrilleJeu(2, positionDKJr);
+										effacerCarres(10, (positionDKJr * 2) + 7, 2, 2);
+										pthread_kill(grilleJeu[3][positionDKJr].tid ,SIGUSR2);  
+										pthread_mutex_unlock(&mutexGrilleJeu);
+										pthread_mutex_unlock(&mutexEvenement);
+										pthread_exit(0);
+									}
+									else 
+									{
+										setGrilleJeu(2, positionDKJr);
+										effacerCarres(10, (positionDKJr * 2) + 7, 2, 2);
+
+										setGrilleJeu(3, positionDKJr, DKJR);
+										afficherDKJr(11, (positionDKJr * 2) + 7, 
+										((positionDKJr - 1) % 4) + 1);	
+										etatDKJr=LIBRE_BAS;
+									}
 								}
 								else 
 								{
@@ -529,7 +558,7 @@ void* FctThreadDKJr(void* p)
 										effacerCarres(10, (positionDKJr * 2) + 7, 2, 2);
 
 										setGrilleJeu(1, positionDKJr, DKJR);
-										afficherDKJr(8, (positionDKJr * 2) + 7, 
+										afficherDKJr(7, (positionDKJr * 2) + 7, 
 										7);	
 										etatDKJr=LIBRE_HAUT;										
 									}
@@ -542,13 +571,26 @@ void* FctThreadDKJr(void* p)
 							case SDLK_DOWN :
 											if(positionDKJr==7)
 											{
-												setGrilleJeu(1, positionDKJr);
-												effacerCarres(8, (positionDKJr * 2) + 7, 2, 2);
+												if(grilleJeu[2][positionDKJr].type == CORBEAU)
+												{
+													pthread_kill(grilleJeu[2][positionDKJr].tid ,SIGUSR1);   
+													setGrilleJeu(1, positionDKJr);
+													effacerCarres(7, (positionDKJr * 2) + 7, 2, 2);
+													pthread_mutex_unlock(&mutexGrilleJeu);
+													pthread_mutex_unlock(&mutexEvenement);
+													pthread_exit(0);
+												
+												}
+												else 
+												{
+													setGrilleJeu(1, positionDKJr);
+													effacerCarres(7, (positionDKJr * 2) + 7, 2, 2);
 
-												setGrilleJeu(2, positionDKJr, DKJR);
-												afficherDKJr(10, (positionDKJr * 2) + 7, 
-												7);
-												etatDKJr=DOUBLE_LIANE_BAS;
+													setGrilleJeu(2, positionDKJr, DKJR);
+													afficherDKJr(10, (positionDKJr * 2) + 7, 
+													7);
+													etatDKJr=DOUBLE_LIANE_BAS;
+												}
 											}
 							break;
 							case SDLK_RIGHT:
@@ -584,14 +626,14 @@ void* FctThreadDKJr(void* p)
 													effacerCarres(7, (positionDKJr * 2) + 7, 2, 2);
 													positionDKJr++;
 													setGrilleJeu(1, positionDKJr, DKJR);
-													afficherDKJr(8, (positionDKJr * 2) + 7, 
+													afficherDKJr(7, (positionDKJr * 2) + 7, 
 													7);
 													
 												}
 											}											
 							break;
 							case SDLK_LEFT:
-											if (positionDKJr > 3&& positionDKJr!=7)
+											if (positionDKJr > 3&& positionDKJr<=7)
 											{
 												if(grilleJeu[1][positionDKJr-1].type == CROCO)
 													{
@@ -887,7 +929,8 @@ void *FctThreadCorbeau(void* p)
 
 	int positionCorbeau = 0;
 	int *spe =(int *)malloc(1 * sizeof(int));
-
+	*spe = positionCorbeau;
+	pthread_setspecific(keySpec, spe);
 	setGrilleJeu(2, positionCorbeau, CORBEAU, pthread_self());
 	afficherCorbeau((positionCorbeau * 2) + 8, 1);
 	
@@ -966,7 +1009,7 @@ void *FctThreadCroco(void* p)
 	timespec t;
 	S_CROCO Croco;
 	Croco.haut = true;
-	Croco.position = 3;
+	Croco.position = 2;
 	S_CROCO *spe =(S_CROCO *)malloc(1 * sizeof(S_CROCO));
 	t.tv_nsec = 700000000;
 	t.tv_sec = 0;
@@ -1004,8 +1047,6 @@ void *FctThreadCroco(void* p)
 					setGrilleJeu(1, Croco.position, CROCO, pthread_self());
 					afficherCroco((Croco.position * 2) + 7, Croco.position%2+1);
 					afficherGrilleJeu();
-					
-					
 					pthread_setspecific(keySpec, spe);
 				}
 			}
@@ -1015,20 +1056,18 @@ void *FctThreadCroco(void* p)
 				setGrilleJeu(1, Croco.position );
 				Croco.haut = false;
 
-				if (grilleJeu[2][7].type == DKJR ||grilleJeu[1][7].type == DKJR ) // double liane 
+				if (grilleJeu[1][7].type == DKJR && grilleJeu[3][7].type == DKJR ) // double liane 
 				{
 					printf("envoie du signal sighup double liane  \n");
 					pthread_kill(threadDKJr,SIGHUP);
-					effacerCarres(7, (Croco.position * 2) + 7, 5, 3); 
+					effacerCarres(8, (Croco.position * 2) + 7, 2, 3); 
 					setGrilleJeu(1, Croco.position);
-					setGrilleJeu(2, Croco.position);
 					setGrilleJeu(3, Croco.position);
-					
 					pthread_mutex_unlock(&mutexGrilleJeu);
 					pthread_exit(0);
 				}
 				else {
-					setGrilleJeu(2, Croco.position, CROCO, pthread_self());
+					setGrilleJeu(3, Croco.position, CROCO, pthread_self());
 					afficherCroco((Croco.position * 2) + 7, 3);
 					*spe = Croco;
 				}
@@ -1038,13 +1077,12 @@ void *FctThreadCroco(void* p)
 		{	
 			if(Croco.position > 1)
 			{	
-
 				if(grilleJeu[3][Croco.position-1].type == DKJR)
 				{
 					// envoyeer un signal a dkjr 
 					printf("envoie du signal sigchld \n");
 					pthread_kill(threadDKJr,SIGCHLD);
-					setGrilleJeu(3, Croco.position + 1);
+					setGrilleJeu(3, Croco.position );
 					pthread_mutex_unlock(&mutexGrilleJeu);
 					pthread_exit(0);
 
@@ -1055,7 +1093,7 @@ void *FctThreadCroco(void* p)
 					{	
 						printf("gestion chute croco\n");
 						effacerCarres(9, 23);
-						setGrilleJeu(2, Croco.position );
+						
 
 						setGrilleJeu(3, Croco.position, CROCO, pthread_self());
 						*spe = Croco;
@@ -1110,13 +1148,14 @@ void *FctThreadCroco(void* p)
 
 void resetDepart()
 {
-	printf("dans restdepart\n");
-	effacerCarres( 10,7, 2, 6);
-	effacerCarres( 12,9, 2, 6);
+	printf("dans resetdepart\n");
+	effacerCarres( 9,7, 2, 6);
+	effacerCarres( 11,9, 2, 6);
 	for(int i = 0 ; i<3 ; i++)
 	{
 		if(grilleJeu[2][i].type == CORBEAU )
 		{
+			printf("enleve 1 corbeau\n");
 			pthread_kill(grilleJeu[2][i].tid ,SIGUSR1); 
 		}
 		
@@ -1125,12 +1164,10 @@ void resetDepart()
 	{
 		if(grilleJeu[3][i].type == CROCO )
 		{
+			printf("enleve 1 croco\n");
 			pthread_kill(grilleJeu[3][i].tid ,SIGUSR2); 
 		}
-		
 	}
-	
-
 }
 
 void HandlerSIGQUIT(int sig )
@@ -1164,7 +1201,7 @@ void HandlerSIGUSR1(int sig )
 	pthread_mutex_lock(&mutexGrilleJeu);
 	int* spe= (int *)pthread_getspecific(keySpec);
 	printf(" -- -la position du corbeau est %d   ",*spe);
-	effacerCarres( 9 ,(*spe * 2) + 7, 4, 2);
+	effacerCarres( 9 ,(*spe * 2) + 7, 2, 2);
 	setGrilleJeu(2, *spe);
 	free(spe);
 	pthread_mutex_unlock(&mutexGrilleJeu);
@@ -1172,7 +1209,6 @@ void HandlerSIGUSR1(int sig )
 }
 void HandlerSIGUSR2(int sig)
 {
-	
 	pthread_mutex_lock(&mutexGrilleJeu);
 	S_CROCO* spe = (S_CROCO *)pthread_getspecific(keySpec);
 	printf(" -- -la position du croco est %d   ",spe->position);
