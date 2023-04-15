@@ -138,8 +138,13 @@ int main(int argc, char* argv[])
 	//masquage des signaux 
 	sigset_t mask; 
 	sigemptyset(&mask); 
- 	sigaddset(&mask, SIGINT); 
-	 sigaddset(&mask, SIGALRM); 
+	sigaddset(&mask, SIGINT); 
+	sigaddset(&mask, SIGALRM); 
+	sigaddset(&mask, SIGQUIT); 
+	sigaddset(&mask, SIGUSR1); 
+	sigaddset(&mask, SIGHUP); 
+	sigaddset(&mask, SIGCHLD); 
+	sigaddset(&mask, SIGUSR2);  
    	sigprocmask(SIG_SETMASK, &mask, NULL); 
 
 	/*afficherCage(2);
@@ -167,9 +172,11 @@ int main(int argc, char* argv[])
 		pthread_join(threadDKJr, (void **)NULL);
 		compteurDeMort++;
 		afficherEchec(compteurDeMort);
-		pthread_join(threadEvenements, (void **)NULL);
+		pthread_mutex_lock(&mutexGrilleJeu);
+		while(1);
+		//pthread_join(threadEvenements, (void **)NULL);
+		pthread_join(threadEvenements, NULL);
 
-	
 
 }
 
@@ -218,8 +225,13 @@ void* FctThreadCle(void *)
 	//masquage des signaux
 	sigset_t mask; 
 	sigemptyset(&mask); 
- 	sigaddset(&mask, SIGINT); 
-	 sigaddset(&mask, SIGALRM); 
+	sigaddset(&mask, SIGINT); 
+	sigaddset(&mask, SIGALRM); 
+	sigaddset(&mask, SIGQUIT); 
+	sigaddset(&mask, SIGUSR1); 
+	sigaddset(&mask, SIGHUP); 
+	sigaddset(&mask, SIGCHLD); 
+	sigaddset(&mask, SIGUSR2); 
    	sigprocmask(SIG_SETMASK, &mask, NULL); 
 
 	int i = 1 ;
@@ -270,8 +282,13 @@ void * FctThreadEvenements (void *)
 	//masquage des signaux
 	sigset_t mask; 
 	sigemptyset(&mask); 
- 	sigaddset(&mask, SIGINT); 
- 	sigaddset(&mask, SIGALRM); 
+	sigaddset(&mask, SIGINT); 
+	sigaddset(&mask, SIGALRM); 
+	sigaddset(&mask, SIGQUIT); 
+	sigaddset(&mask, SIGUSR1); 
+	sigaddset(&mask, SIGHUP); 
+	sigaddset(&mask, SIGCHLD); 
+	sigaddset(&mask, SIGUSR2); 
    	sigprocmask(SIG_SETMASK, &mask, NULL); 
 	 
 
@@ -318,6 +335,8 @@ void* FctThreadDKJr(void* p)
 	sigset_t mask; 
 	sigemptyset(&mask);
 	sigaddset(&mask, SIGALRM); 
+	sigaddset(&mask, SIGUSR1); 
+	sigaddset(&mask, SIGUSR2); 
    	sigprocmask(SIG_SETMASK, &mask, NULL); 
 
 	struct timespec tsaut;
@@ -826,8 +845,13 @@ void* FctThreadDK(void* p)
 {
 	sigset_t mask; 
 	sigemptyset(&mask); 
- 	sigaddset(&mask, SIGINT); 
- 	sigaddset(&mask, SIGALRM); 
+	sigaddset(&mask, SIGINT); 
+	sigaddset(&mask, SIGALRM); 
+	sigaddset(&mask, SIGQUIT); 
+	sigaddset(&mask, SIGUSR1); 
+	sigaddset(&mask, SIGHUP); 
+	sigaddset(&mask, SIGCHLD); 
+	sigaddset(&mask, SIGUSR2);  
    	sigprocmask(SIG_SETMASK, &mask, NULL); 
 
 	pthread_mutex_lock(&mutexDK); 
@@ -868,8 +892,13 @@ void* FctThreadScore(void* p)
 {
 	sigset_t mask; 
 	sigemptyset(&mask); 
- 	sigaddset(&mask, SIGINT); 
- 	sigaddset(&mask, SIGALRM); 
+	sigaddset(&mask, SIGINT); 
+	sigaddset(&mask, SIGALRM); 
+	sigaddset(&mask, SIGQUIT); 
+	sigaddset(&mask, SIGUSR1); 
+	sigaddset(&mask, SIGHUP); 
+	sigaddset(&mask, SIGCHLD); 
+	sigaddset(&mask, SIGUSR2); ; 
    	sigprocmask(SIG_SETMASK, &mask, NULL); 
 
 	if(MAJScore==true) 
@@ -884,7 +913,12 @@ void* FctThreadEnnemis(void* p)
 {
 	sigset_t mask; 
 	sigemptyset(&mask); 
- 	sigaddset(&mask, SIGINT); // car ctrl c peut le detruire  
+ 	sigaddset(&mask, SIGINT); 
+	sigaddset(&mask, SIGQUIT); 
+	sigaddset(&mask, SIGUSR1); 
+	sigaddset(&mask, SIGHUP); 
+	sigaddset(&mask, SIGCHLD); 
+	sigaddset(&mask, SIGUSR2);   
    	sigprocmask(SIG_SETMASK, &mask, NULL); 
 	alarm(15);
 	int RDMennemi ;
@@ -919,8 +953,12 @@ void *FctThreadCorbeau(void* p)
 
 	sigset_t mask; 
 	sigemptyset(&mask); 
- 	sigaddset(&mask, SIGINT); // car ctrl c peut le detruire  
-	 sigaddset(&mask, SIGALRM);
+	sigaddset(&mask, SIGINT); 
+	sigaddset(&mask, SIGALRM); 
+	sigaddset(&mask, SIGQUIT); 
+	sigaddset(&mask, SIGHUP); 
+	sigaddset(&mask, SIGCHLD); 
+	sigaddset(&mask, SIGUSR2); 
    	sigprocmask(SIG_SETMASK, &mask, NULL); 
 
 	timespec t ; 
@@ -1002,8 +1040,12 @@ void *FctThreadCroco(void* p)
 {
 	sigset_t mask; 
 	sigemptyset(&mask); 
- 	sigaddset(&mask, SIGINT); // car ctrl c peut le detruire  
-	sigaddset(&mask, SIGALRM);
+	sigaddset(&mask, SIGINT); 
+	sigaddset(&mask, SIGALRM); 
+	sigaddset(&mask, SIGQUIT); 
+	sigaddset(&mask, SIGUSR1); 
+	sigaddset(&mask, SIGHUP); 
+	sigaddset(&mask, SIGCHLD); 
    	sigprocmask(SIG_SETMASK, &mask, NULL); 
 
 	timespec t;
